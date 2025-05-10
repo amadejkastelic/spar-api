@@ -1,5 +1,5 @@
 {
-  description = "Spar GraphQL API";
+  description = "Spar REST API Client";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
@@ -27,11 +27,15 @@
         ];
         devDeps = buildDeps ++ [
           pkgs.golangci-lint
+          pkgs.delve
+          pkgs.gopls
         ];
       in
       {
         devShell = pkgs.mkShell {
-          buildInputs = devDeps;
+          nativeBuildInputs = devDeps;
+
+          hardeningDisable = [ "fortify" ];
         };
       }
     );
