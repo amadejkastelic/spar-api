@@ -10,12 +10,19 @@
       url = "github:cachix/git-hooks.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nix-github-actions = {
+      url = "github:nix-community/nix-github-actions";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
     {
+      self,
       nixpkgs,
       flake-utils,
+      nix-github-actions,
       ...
     }@inputs:
     flake-utils.lib.eachDefaultSystem (
@@ -46,6 +53,23 @@
       {
         checks = {
           pre-commit-check = preCommitCheck;
+        };
+
+        githubActions = nix-github-actions.lib.mkGithubMatrix {
+          inherit (self) checks;
+        };
+
+        packages.default = pkgs.buildGoModule {
+          pname = "spar-api-cli";
+          version = "0.1.0";
+
+          src = ./.;
+
+          vendorHash = null;
+
+          doCheck = true;
+
+          subPackages = [ "cmd/example" ];
         };
 
         devShells.default = import ./nix/dev-shell.nix {
