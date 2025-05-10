@@ -6,4 +6,8 @@ pkgs.buildGoModule {
   vendorHash = null;
   doCheck = true;
   subPackages = [ "cmd/example" ];
+
+  postInstall = ''
+    mv $out/bin/example $out/bin/spar-api-cli
+  '';
 }

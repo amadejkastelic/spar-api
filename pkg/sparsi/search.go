@@ -17,6 +17,8 @@ var defaultSubstringFilter = Filter{
 	Substring: true,
 }
 
+// Categories lists all available categories that can be used for filtering
+// products.
 func (c *client) Categories() (*CategoriesResponse, error) {
 	query := url.Values{}
 	query.Set("substringFilter", defaultSubstringFilter.String())
@@ -43,6 +45,7 @@ func (c *client) Categories() (*CategoriesResponse, error) {
 	}, nil
 }
 
+// Search performs a search query against the Spar API.
 func (c *client) Search(in SearchRequest) (*SearchResponse, error) {
 	query := url.Values{}
 	in.Filters = append(in.Filters, defaultSubstringFilter)

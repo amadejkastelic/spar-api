@@ -28,6 +28,7 @@ type client struct {
 	userAgent  string
 }
 
+// NewClient creates a new Sparsi client with the given options.
 func NewClient(opts ...option) *client {
 	baseURL, _ := url.Parse(defaultBaseURL)
 
