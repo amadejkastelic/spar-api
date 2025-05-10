@@ -13,35 +13,40 @@ The Spar API Client is a Go library designed to interact with the [Spar Online](
 * Supports pagination and filtering.
 * Provides a command-line interface (CLI).
 
-
 ## Running
 
 To run the provided example, use the following command:
 ```bash
-nix run .#default -- --help
+› nix run .#default -- --help
+```
+
+Find current price of Monster White Energy Drink:
+```bash
+› nix run .#default -- -query="Monster White"
+Found 1 products (total: 1)
+1. MONSTER ULTRA 0,5L - 1.73
 ```
 
 ## Development
 
 ```bash
-nix develop
+› nix develop
 ```
 
 ## Build
 
 ```bash
-nix build
+› nix build
 ```
 
 ## Test
 
 To run tests, use the following commands:
 ```bash
-nix develop
-go test ./...
+› nix develop --command go test ./...
 ```
 
 To run all checks, including tests, use:
 ```bash
-nix flake check
+› nix flake check
 ```
