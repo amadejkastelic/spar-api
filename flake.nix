@@ -64,13 +64,9 @@
             preCommitHooks = pre-commit-hooks.lib.${system};
           };
 
-          package = pkgs.buildGoModule {
-            pname = "spar-api-cli";
+          package = import ./nix/package.nix {
+            inherit pkgs;
             version = "0.1.0";
-            src = ./.;
-            vendorHash = null;
-            doCheck = true;
-            subPackages = [ "cmd/example" ];
           };
         in
         {
@@ -91,9 +87,9 @@
 
       githubActions = nix-github-actions.lib.mkGithubMatrix {
         checks = {
-          x86_64-linux = self.checks.x86_64-linux;
-          aarch64-linux = self.checks.aarch64-linux;
-          aarch64-darwin = self.checks.aarch64-darwin;
+          x86_64-linux = self.packages.x86_64-linux;
+          aarch64-linux = self.packages.aarch64-linux;
+          aarch64-darwin = self.packages.aarch64-darwin;
         };
       };
     };

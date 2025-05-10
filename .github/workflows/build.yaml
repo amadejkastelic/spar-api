@@ -1,8 +1,16 @@
 name: Nix Flake Build
 
 on:
-  pull_request:
   push:
+    paths:
+      - '**/*.nix'
+      - '**/*.go'
+      - go.mod
+  pull_request:
+    paths:
+      - '**/*.nix'
+      - '**/*.go'
+      - go.mod
 
 jobs:
   nix-matrix:
