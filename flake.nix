@@ -55,10 +55,6 @@
           pre-commit-check = preCommitCheck;
         };
 
-        githubActions = nix-github-actions.lib.mkGithubMatrix {
-          inherit (self) checks;
-        };
-
         packages.default = pkgs.buildGoModule {
           pname = "spar-api-cli";
           version = "0.1.0";
@@ -70,6 +66,10 @@
           doCheck = true;
 
           subPackages = [ "cmd/example" ];
+        };
+
+        githubActions = nix-github-actions.lib.mkGithubMatrix {
+          checks = self.packages;
         };
 
         devShells.default = import ./nix/dev-shell.nix {
