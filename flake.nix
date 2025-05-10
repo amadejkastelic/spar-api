@@ -4,8 +4,6 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
-    flake-utils.url = "github:numtide/flake-utils";
-
     pre-commit-hooks = {
       url = "github:cachix/git-hooks.nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -21,62 +19,82 @@
     {
       self,
       nixpkgs,
-      flake-utils,
+      pre-commit-hooks,
       nix-github-actions,
       ...
-    }@inputs:
-    flake-utils.lib.eachDefaultSystem (
-      system:
-      let
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [ ];
+    }:
+    let
+      supportedSystems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "aarch64-darwin"
+      ];
+
+      forAllSystems =
+        f:
+        builtins.listToAttrs (
+          map (system: {
+            name = system;
+            value = f system;
+          }) supportedSystems
+        );
+
+      perSystem =
+        system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+          };
+
+          buildDeps = [
+            pkgs.git
+            pkgs.go
+            pkgs.gnumake
+          ];
+
+          devDeps = buildDeps ++ [
+            pkgs.golangci-lint
+            pkgs.delve
+            pkgs.gopls
+            pkgs.golines
+          ];
+
+          preCommitCheck = import ./nix/pre-commit.nix {
+            inherit pkgs;
+            preCommitHooks = pre-commit-hooks.lib.${system};
+          };
+
+          package = pkgs.buildGoModule {
+            pname = "spar-api-cli";
+            version = "0.1.0";
+            src = ./.;
+            vendorHash = null;
+            doCheck = true;
+            subPackages = [ "cmd/example" ];
+          };
+        in
+        {
+          packages.default = package;
+          devShells.default = import ./nix/dev-shell.nix {
+            inherit pkgs;
+            deps = devDeps;
+            preCommitCheck = preCommitCheck;
+          };
+          checks.pre-commit-check = preCommitCheck;
         };
 
-        buildDeps = [
-          pkgs.git
-          pkgs.go
-          pkgs.gnumake
-        ];
-        devDeps = buildDeps ++ [
-          pkgs.golangci-lint
-          pkgs.delve
-          pkgs.gopls
-          pkgs.golines
-        ];
+    in
+    {
+      packages = forAllSystems (system: (perSystem system).packages);
+      devShells = forAllSystems (system: (perSystem system).devShells);
+      checks = forAllSystems (system: (perSystem system).checks);
 
-        preCommitCheck = import ./nix/pre-commit.nix {
-          inherit pkgs;
-          preCommitHooks = inputs.pre-commit-hooks.lib.${system};
-        };
-      in
-      {
+      githubActions = nix-github-actions.lib.mkGithubMatrix {
         checks = {
-          pre-commit-check = preCommitCheck;
+          x86_64-linux = self.checks.x86_64-linux;
+          aarch64-linux = self.checks.aarch64-linux;
+          aarch64-darwin = self.checks.aarch64-darwin;
         };
-
-        packages.default = pkgs.buildGoModule {
-          pname = "spar-api-cli";
-          version = "0.1.0";
-
-          src = ./.;
-
-          vendorHash = null;
-
-          doCheck = true;
-
-          subPackages = [ "cmd/example" ];
-        };
-
-        githubActions = nix-github-actions.lib.mkGithubMatrix {
-          checks = self.packages;
-        };
-
-        devShells.default = import ./nix/dev-shell.nix {
-          inherit pkgs;
-          deps = devDeps;
-          preCommitCheck = preCommitCheck;
-        };
-      }
-    );
+      };
+    };
 }
